@@ -1,0 +1,7 @@
+new File(rootDir, 'modules').eachDir { possibleSubprojectDir ->
+    def subprojectName = 'modules:' + possibleSubprojectDir.name
+    include subprojectName
+    def subprojectPath = ':' + subprojectName
+    def subproject = project(subprojectPath)
+    subproject.projectDir = possibleSubprojectDir
+}

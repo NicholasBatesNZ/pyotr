@@ -1,0 +1,76 @@
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.util.ConfigurationBuilder;
+
+apply plugin: 'java'
+
+// Dependencies needed for what our Gradle scripts themselves use. It cannot be included via an external Gradle file :-(
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        // Needed for caching reflected data during builds
+        classpath 'org.reflections:reflections:0.9.10'
+        classpath 'dom4j:dom4j:1.6.1'
+    }
+}
+
+repositories {
+    jcenter()
+    google()
+    maven { url "http://artifactory.terasology.org/artifactory/virtual-repo-live" }
+}
+
+dependencies {
+    compile project(':engine')
+}
+
+// Change the output dir of each module
+sourceSets {
+    main {
+        java {
+            output.classesDir 'build/classes'
+        }
+    }
+}
+
+task cacheReflections {
+    description = 'Caches reflection output to make regular startup faster. May go stale and need cleanup at times.'
+    // TODO: The extra "org" qualifier excludes test classes otherwise sucked up in Jenkins, causing issues. Redo later
+    File dirToReflect = new File(sourceSets.main.output.classesDir, "org")
+    inputs.files dirToReflect
+    outputs.file file(sourceSets.main.output.classesDir.toString() + "/reflections.cache")
+    dependsOn classes
+    doFirst {
+        // Without the .mkdirs() we might hit a scenario where the classes dir doesn't exist yet
+        dirToReflect.mkdirs()
+        Reflections reflections = new Reflections(new ConfigurationBuilder()
+                .addUrls(dirToReflect.toURI().toURL())
+                .setScanners(new TypeAnnotationsScanner(), new SubTypesScanner()))
+        reflections.save(sourceSets.main.output.classesDir.toString() + "/reflections.cache")
+    }
+}
+
+task cleanReflections(type: Delete) {
+    description = 'Cleans the reflection cache. Useful in cases where it has gone stale and needs regeneration.'
+    delete sourceSets.main.output.classesDir.toString() + "/reflections.cache"
+}
+
+// Instructions for packaging a jar file - is a manifest even needed for modules?
+jar {
+    // Make sure the assets directory is included
+    dependsOn cacheReflections
+
+    // Jarring needs to copy module.json and all the assets into the output
+    doFirst {
+        copy {
+            from 'module.json'
+            into 'build/classes'
+        }
+    }
+}
+
+jar.finalizedBy cleanReflections
