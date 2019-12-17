@@ -1,6 +1,6 @@
 package org.pyotr.engine;
 
-import org.pyotr.engine.module.ModuleManager;
+import org.pyotr.engine.ModuleManager;
 import org.pyotr.engine.IDoSomething;
 
 import org.slf4j.Logger;
@@ -17,6 +17,7 @@ class PyotrEntry {
 
         logger.info("In the beginning, was the PyotrEntry");
 
+        // start looking for modules
         new Thread(() -> {
             moduleManager = new ModuleManager();
             try {
@@ -27,6 +28,7 @@ class PyotrEntry {
             initFinished = true;
         }).start();
 
+        // wait until all modules are found
         while (!initFinished) {
             try {
                 Thread.sleep(100);
@@ -35,6 +37,7 @@ class PyotrEntry {
             }
         }
 
+        // example of calling module classes
         for (Class<?> somethingClass : moduleManager.getEnvironment().getSubtypesOf(IDoSomething.class)) {
             try {
                 IDoSomething somethingSystem = (IDoSomething) somethingClass.newInstance();

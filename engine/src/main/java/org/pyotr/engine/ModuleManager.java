@@ -1,4 +1,4 @@
-package org.pyotr.engine.module;
+package org.pyotr.engine;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -10,6 +10,7 @@ import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.terasology.gestalt.module.Module;
 import org.terasology.gestalt.module.ModuleEnvironment;
+import org.terasology.gestalt.module.ModuleFactory;
 import org.terasology.gestalt.module.ModuleMetadata;
 import org.terasology.gestalt.module.ModuleMetadataJsonAdapter;
 import org.terasology.gestalt.module.ModulePathScanner;
@@ -20,6 +21,7 @@ import org.terasology.gestalt.module.sandbox.ModuleSecurityManager;
 import org.terasology.gestalt.module.sandbox.ModuleSecurityPolicy;
 import org.terasology.gestalt.module.sandbox.StandardPermissionProviderFactory;
 
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.ReflectPermission;
@@ -42,8 +44,9 @@ public class ModuleManager {
             Reader engineModuleReader = new InputStreamReader(getClass().getResourceAsStream("/module.json"), Charsets.UTF_8);
             ModuleMetadata engineMetadata = new ModuleMetadataJsonAdapter().read(engineModuleReader);
             engineModuleReader.close();
-            PyotrModuleFactory moduleFactory = new PyotrModuleFactory();
-            engineModule = moduleFactory.createClasspathModule(engineMetadata, getClass());
+            File file = new File(Paths.get(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).toUri());
+            ModuleFactory moduleFactory = new ModuleFactory();
+            engineModule = moduleFactory.createModule(engineMetadata, file);
 
             registry = new TableModuleRegistry();
             Path modulesRoot;
@@ -65,6 +68,7 @@ public class ModuleManager {
     public void loadEnvironment(Set<Module> modules) {
         StandardPermissionProviderFactory permissionFactory = new StandardPermissionProviderFactory();
 
+        permissionFactory.getBasePermissionSet().addAPIPackage("java.lang");
         permissionFactory.getBasePermissionSet().addAPIClass(Logger.class);
 
         // The JSON serializers need to reflect classes to discover what exists
