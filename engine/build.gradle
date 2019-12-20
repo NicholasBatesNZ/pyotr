@@ -19,8 +19,6 @@ task run(type: JavaExec) {
 }
 
 jar {
-    archiveName = 'pyotr-engine.jar'
-
     manifest {
         attributes 'Main-Class': project.mainClassName
     }

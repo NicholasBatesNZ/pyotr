@@ -2,6 +2,7 @@ package org.pyotr.engine;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
+
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -25,7 +26,6 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.ReflectPermission;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Policy;
 import java.util.Set;
@@ -44,15 +44,13 @@ public class ModuleManager {
             Reader engineModuleReader = new InputStreamReader(getClass().getResourceAsStream("/module.json"), Charsets.UTF_8);
             ModuleMetadata engineMetadata = new ModuleMetadataJsonAdapter().read(engineModuleReader);
             engineModuleReader.close();
-            File file = new File(Paths.get(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).toUri());
             ModuleFactory moduleFactory = new ModuleFactory();
-            engineModule = moduleFactory.createModule(engineMetadata, file);
+            engineModule = moduleFactory.createPackageModule(engineMetadata, getClass().getTypeName());
 
             registry = new TableModuleRegistry();
-            Path modulesRoot;
-            modulesRoot = Paths.get("..").resolve("modules");
+            File modulesRoot = Paths.get("..").resolve("modules").toFile();
             ModulePathScanner scanner = new ModulePathScanner(moduleFactory);
-            scanner.scan(registry, modulesRoot.toFile());
+            scanner.scan(registry, modulesRoot);
 
             Set<Module> requiredModules = Sets.newHashSet();
             registry.add(engineModule);
