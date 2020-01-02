@@ -45,7 +45,8 @@ public class ModuleManager {
             ModuleMetadata engineMetadata = new ModuleMetadataJsonAdapter().read(engineModuleReader);
             engineModuleReader.close();
             ModuleFactory moduleFactory = new ModuleFactory();
-            engineModule = moduleFactory.createPackageModule(engineMetadata, getClass().getTypeName());
+            File file = new File(Paths.get(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).resolve("..").toUri());
+            engineModule = moduleFactory.createModule(engineMetadata, file);
 
             registry = new TableModuleRegistry();
             File modulesRoot = Paths.get("..").resolve("modules").toFile();
@@ -75,13 +76,14 @@ public class ModuleManager {
         permissionFactory.getBasePermissionSet().grantPermission("com.google.gson", RuntimePermission.class);
         permissionFactory.getBasePermissionSet().grantPermission("com.google.gson.internal", RuntimePermission.class);
 
-        ConfigurationBuilder config = new ConfigurationBuilder().addClassLoader(ClasspathHelper.contextClassLoader())
+        ConfigurationBuilder config = new ConfigurationBuilder()
+                .addClassLoader(ClasspathHelper.contextClassLoader())
                 .addUrls(ClasspathHelper.forClassLoader())
                 .addScanners(new TypeAnnotationsScanner(), new SubTypesScanner());
         Reflections reflections = new Reflections(config);
-
         APIScanner scanner = new APIScanner(permissionFactory);
         scanner.scan(reflections);
+
         Policy.setPolicy(new ModuleSecurityPolicy());
         System.setSecurityManager(new ModuleSecurityManager());
         environment = new ModuleEnvironment(modules, permissionFactory);

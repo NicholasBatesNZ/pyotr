@@ -1,10 +1,29 @@
 package org.pyotr.engine;
 
 import org.pyotr.engine.ModuleManager;
+import org.pyotr.engine.entitysystem.CourageSystem;
+import org.pyotr.engine.entitysystem.LocationComponent;
+import org.pyotr.engine.entitysystem.ScareEvent;
 import org.pyotr.engine.IDoSomething;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.terasology.gestalt.entitysystem.component.Component;
+import org.terasology.gestalt.entitysystem.component.management.ComponentManager;
+import org.terasology.gestalt.entitysystem.component.store.ArrayComponentStore;
+import org.terasology.gestalt.entitysystem.component.store.ComponentStore;
+import org.terasology.gestalt.entitysystem.component.store.ConcurrentComponentStore;
+import org.terasology.gestalt.entitysystem.entity.EntityManager;
+import org.terasology.gestalt.entitysystem.entity.EntityRef;
+import org.terasology.gestalt.entitysystem.entity.manager.CoreEntityManager;
+import org.terasology.gestalt.entitysystem.event.EventSystem;
+import org.terasology.gestalt.entitysystem.event.impl.EventReceiverMethodSupport;
+import org.terasology.gestalt.entitysystem.event.impl.EventSystemImpl;
 
 class PyotrEntry {
 
@@ -46,5 +65,25 @@ class PyotrEntry {
                 e.printStackTrace();
             }
         }
+
+        // setup entity store
+        ComponentManager componentManager = new ComponentManager();
+        List<ComponentStore<?>> stores = Lists.newArrayList();
+        for (Class<? extends Component> componentType : moduleManager.getEnvironment().getSubtypesOf(Component.class)) {
+            stores.add(new ConcurrentComponentStore(new ArrayComponentStore(componentManager.getType(componentType))));
+        }
+        EntityManager entityManager = new CoreEntityManager(stores);
+
+        EntityRef entity = entityManager.createEntity(new LocationComponent());
+
+        EventSystem eventSystem = new EventSystemImpl();
+        EventReceiverMethodSupport eventReceiverMethodSupport = new EventReceiverMethodSupport();
+        eventReceiverMethodSupport.register(new CourageSystem(), eventSystem);
+        
+        logger.info("Attempting to scare entity");
+        eventSystem.send(new ScareEvent(10), entity);
+        eventSystem.processEvents();
+
+        moduleManager.getEnvironment().close();
     }
 }

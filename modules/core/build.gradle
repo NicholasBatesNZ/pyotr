@@ -21,6 +21,7 @@ buildscript {
 }
 
 repositories {
+    mavenLocal()
     jcenter()
     google()
     maven { url "http://artifactory.terasology.org/artifactory/virtual-repo-live" }

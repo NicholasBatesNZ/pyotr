@@ -1,0 +1,6 @@
+task run() {
+    doFirst {
+        // VS Code likes to generate this folder and break things
+        delete 'modules/.settings'
+    }
+}
