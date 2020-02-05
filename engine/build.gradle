@@ -1,25 +1,5 @@
 apply plugin: 'java'
 
-import org.reflections.Reflections
-import org.reflections.scanners.ResourcesScanner
-import org.reflections.scanners.SubTypesScanner
-import org.reflections.scanners.TypeAnnotationsScanner
-import org.reflections.serializers.JsonSerializer
-
-// Dependencies needed for what our Gradle scripts themselves use. It cannot be included via an external Gradle file :-(
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        // Needed for caching reflected data during builds
-        classpath 'org.reflections:reflections:0.9.10'
-        classpath 'dom4j:dom4j:1.6.1'
-        classpath 'com.google.code.gson:gson:2.8.5'
-    }
-}
-
 repositories {
     mavenLocal()
     jcenter()
@@ -29,6 +9,7 @@ repositories {
 
 dependencies {
     compile group: 'org.terasology.gestalt', name: 'gestalt-module', version: '7.0.4-SNAPSHOT'
+    compile group: 'org.terasology.gestalt', name: 'gestalt-asset-core', version: '7.0.4-SNAPSHOT'
     compile group: 'org.terasology.gestalt', name: 'gestalt-entity-system', version: '7.0.4-SNAPSHOT'
     compile group: 'org.terasology.gestalt', name: 'gestalt-es-perf', version: '7.0.4-SNAPSHOT'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
@@ -45,34 +26,4 @@ jar {
     manifest {
         attributes 'Main-Class': project.mainClassName
     }
-}
-
-// Change the output dir of each module
-sourceSets {
-    main {
-        java {
-            output.classesDir 'build/classes'
-        }
-    }
-}
-
-compileJava.doLast {
-    // https://github.com/MovingBlocks/gestalt/blob/develop/testpack/moduleA/build.gradle
-    def resourcesPath = sourceSets.find { it.name == 'main' }.resources.srcDirs
-    def classPath = files { compileJava.destinationDir }
-    URL[] scanUrls = classPath.collect { it.toURI().toURL() } + resourcesPath.collect {
-        it.toURI().toURL()
-    }
-    URL[] classLoaderUrls = scanUrls + compileJava.classpath.collect { it.toURI().toURL() }
-
-    ClassLoader classLoader = new URLClassLoader(classLoaderUrls, getClass().getClassLoader())
-    org.reflections.Configuration config = new org.reflections.util.ConfigurationBuilder()
-    config.addClassLoader(classLoader)
-    config.setUrls(scanUrls)
-
-    config.addScanners(new ResourcesScanner(), new SubTypesScanner(false), new TypeAnnotationsScanner().filterResultsBy())
-    Reflections reflections = new Reflections(config)
-    JsonSerializer serializer = new JsonSerializer()
-    def outPath = compileJava.destinationDir.toString() + "/manifest.json"
-    serializer.save(reflections, outPath)
 }

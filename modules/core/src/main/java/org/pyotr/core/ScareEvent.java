@@ -1,4 +1,4 @@
-package org.pyotr.engine.entitysystem;
+package org.pyotr.core;
 
 import org.terasology.gestalt.entitysystem.event.Event;
 

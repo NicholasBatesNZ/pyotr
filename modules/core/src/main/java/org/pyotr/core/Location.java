@@ -1,8 +1,8 @@
-package org.pyotr.engine.entitysystem;
+package org.pyotr.core;
 
 import org.terasology.gestalt.entitysystem.component.Component;
 
-public final class LocationComponent implements Component<LocationComponent> {
+public final class Location implements Component<Location> {
 
     private int x = 0;
     private int y = 0;
@@ -24,7 +24,7 @@ public final class LocationComponent implements Component<LocationComponent> {
     }
 
     @Override
-    public void copy(LocationComponent other) {
+    public void copy(Location other) {
         this.x = other.x;
         this.y = other.y;
     }
