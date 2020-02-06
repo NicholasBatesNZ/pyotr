@@ -14,7 +14,6 @@ import org.terasology.gestalt.assets.module.ModuleEnvironmentDependencyProvider;
 import org.terasology.gestalt.entitysystem.component.Component;
 import org.terasology.gestalt.entitysystem.component.management.ComponentManager;
 import org.terasology.gestalt.entitysystem.component.management.ComponentTypeIndex;
-import org.terasology.gestalt.entitysystem.component.management.LambdaComponentTypeFactory;
 import org.terasology.gestalt.entitysystem.component.store.ArrayComponentStore;
 import org.terasology.gestalt.entitysystem.component.store.ComponentStore;
 import org.terasology.gestalt.entitysystem.component.store.ConcurrentComponentStore;
@@ -26,16 +25,12 @@ import org.terasology.gestalt.entitysystem.event.EventSystem;
 import org.terasology.gestalt.entitysystem.event.MethodHandleEventHandle;
 import org.terasology.gestalt.entitysystem.event.impl.EventReceiverMethodSupport;
 import org.terasology.gestalt.entitysystem.event.impl.EventSystemImpl;
+import org.terasology.gestalt.entitysystem.prefab.GeneratedFromRecipeComponent;
 import org.terasology.gestalt.entitysystem.prefab.Prefab;
 import org.terasology.gestalt.entitysystem.prefab.PrefabData;
 import org.terasology.gestalt.entitysystem.prefab.PrefabJsonFormat;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class EntitySystemManager {
-
-    private static final Logger logger = LoggerFactory.getLogger(EntitySystemManager.class);
 
     private static EntityManager entityManager;
     private static EventSystem eventSystem = new EventSystemImpl();
@@ -44,7 +39,9 @@ public class EntitySystemManager {
 
     public EntitySystemManager(ModuleManager moduleManager) {
 
-        ComponentManager componentManager = new ComponentManager(new LambdaComponentTypeFactory());
+        // TODO: current Gestalt snapshup LambdaComponentTypeFactory is broken. Replace when fixed
+        //ComponentManager componentManager = new ComponentManager(new LambdaComponentTypeFactory());
+        ComponentManager componentManager = new ComponentManager();
         ModuleAwareAssetTypeManager assetTypeManager = new ModuleAwareAssetTypeManagerImpl();
         AssetManager assetManager = new AssetManager(assetTypeManager);
 
@@ -62,8 +59,12 @@ public class EntitySystemManager {
 
         List<ComponentStore<?>> stores = Lists.newArrayList();
         for (Class<? extends Component> componentType : moduleManager.getEnvironment().getSubtypesOf(Component.class)) {
-            stores.add(new ConcurrentComponentStore(new ArrayComponentStore(componentManager.getType(componentType))));
+            stores.add(
+                    new ConcurrentComponentStore<>(new ArrayComponentStore<>(componentManager.getType(componentType))));
         }
+        // TODO: check an updated Gestalt to see if this line can be removed
+        stores.add(new ConcurrentComponentStore<>(
+                new ArrayComponentStore<>(componentManager.getType(GeneratedFromRecipeComponent.class))));
         entityManager = new CoreEntityManager(stores);
 
         assetManager.getAvailableAssets(Prefab.class).forEach(urn -> {
