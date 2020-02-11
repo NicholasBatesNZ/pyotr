@@ -14,6 +14,7 @@ import org.terasology.gestalt.assets.module.ModuleEnvironmentDependencyProvider;
 import org.terasology.gestalt.entitysystem.component.Component;
 import org.terasology.gestalt.entitysystem.component.management.ComponentManager;
 import org.terasology.gestalt.entitysystem.component.management.ComponentTypeIndex;
+import org.terasology.gestalt.entitysystem.component.management.MethodHandleComponentTypeFactory;
 import org.terasology.gestalt.entitysystem.component.store.ArrayComponentStore;
 import org.terasology.gestalt.entitysystem.component.store.ComponentStore;
 import org.terasology.gestalt.entitysystem.component.store.ConcurrentComponentStore;
@@ -39,9 +40,7 @@ public class EntitySystemManager {
 
     public EntitySystemManager(ModuleManager moduleManager) {
 
-        // TODO: current Gestalt snapshup LambdaComponentTypeFactory is broken. Replace when fixed
-        //ComponentManager componentManager = new ComponentManager(new LambdaComponentTypeFactory());
-        ComponentManager componentManager = new ComponentManager();
+        ComponentManager componentManager = new ComponentManager(new MethodHandleComponentTypeFactory());
         ModuleAwareAssetTypeManager assetTypeManager = new ModuleAwareAssetTypeManagerImpl();
         AssetManager assetManager = new AssetManager(assetTypeManager);
 
@@ -62,7 +61,7 @@ public class EntitySystemManager {
             stores.add(
                     new ConcurrentComponentStore<>(new ArrayComponentStore<>(componentManager.getType(componentType))));
         }
-        // TODO: check an updated Gestalt to see if this line can be removed
+        // GeneratedFromRecipeComponent needed for prefabs to work
         stores.add(new ConcurrentComponentStore<>(
                 new ArrayComponentStore<>(componentManager.getType(GeneratedFromRecipeComponent.class))));
         entityManager = new CoreEntityManager(stores);
