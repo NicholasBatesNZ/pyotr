@@ -13,6 +13,7 @@ dependencies {
     compile group: 'org.terasology.gestalt', name: 'gestalt-entity-system', version: '7.0.4-SNAPSHOT'
     compile group: 'org.terasology.gestalt', name: 'gestalt-es-perf', version: '7.0.4-SNAPSHOT'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.0.0'
 }
 
 project.ext.mainClassName = "org.pyotr.engine.PyotrEntry"

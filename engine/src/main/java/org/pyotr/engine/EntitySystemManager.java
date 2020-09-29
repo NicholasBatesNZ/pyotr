@@ -37,6 +37,7 @@ public class EntitySystemManager {
     private static EventSystem eventSystem = new EventSystemImpl();
     private static EventReceiverMethodSupport eventReceiverMethodSupport = new EventReceiverMethodSupport(
             MethodHandleEventHandle::new);
+    private SerialisationManager serialisationManager;
 
     public EntitySystemManager(ModuleManager moduleManager) {
 
@@ -68,9 +69,17 @@ public class EntitySystemManager {
 
         assetManager.getAvailableAssets(Prefab.class).forEach(urn -> {
             assetManager.getAsset(urn, Prefab.class).ifPresent(prefab -> {
-                entityManager.createEntity(prefab);
+                //entityManager.createEntity(prefab);
             });
         });
+
+        serialisationManager = new SerialisationManager("entity_store.dat", entityManager,
+                moduleManager.getEnvironment().getSubtypesOf(Component.class).iterator().next().getClassLoader());
+        try {
+            serialisationManager.deserialise();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void registerSystem(Object system) {
@@ -83,5 +92,11 @@ public class EntitySystemManager {
             eventSystem.send(event, iterator.getEntity());
         }
         eventSystem.processEvents();
+        try {
+            serialisationManager.serialise();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

@@ -16,7 +16,8 @@ public class CourageSystem {
         entity.getComponent(Location.class).ifPresent(location -> {
             location.setX(location.getX() - event.getAmount());
             entity.setComponent(location);
-            logger.info("My courage was just challenged and I jumped backwards " + event.getAmount() + " units");
+            logger.info("My courage was just challenged and I jumped backwards " + event.getAmount() + " units to "
+                    + location.getX());
         });
         return EventResult.CONTINUE;
     }
